@@ -6,11 +6,13 @@ import Marketplace from './components/Marketplace';
 import GigDetail from './components/GigDetail';
 import Profile from './components/Profile';
 import OnboardingModal from './components/OnboardingModal';
+import AdminDashboard from './components/AdminDashboard';
 
 export type ViewState = 
   | { type: 'home' }
   | { type: 'gig'; id: string }
-  | { type: 'profile'; id: string };
+  | { type: 'profile'; id: string }
+  | { type: 'admin' };
 
 export default function App() {
   const [view, setView] = useState<ViewState>({ type: 'home' });
@@ -18,18 +20,21 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-[#0F172A] text-white selection:bg-pink-500/30">
-      <Navbar 
-        onExplore={() => {
-          setView({ type: 'home' });
-          setTimeout(() => {
-            document.getElementById('marketplace')?.scrollIntoView({ behavior: 'smooth' });
-          }, 100);
-        }} 
-        onJoin={() => setIsJoinModalOpen(true)}
-        onHome={() => setView({ type: 'home' })}
-      />
+      {view.type !== 'admin' && (
+        <Navbar 
+          onExplore={() => {
+            setView({ type: 'home' });
+            setTimeout(() => {
+              document.getElementById('marketplace')?.scrollIntoView({ behavior: 'smooth' });
+            }, 100);
+          }} 
+          onJoin={() => setIsJoinModalOpen(true)}
+          onHome={() => setView({ type: 'home' })}
+          onAdmin={() => setView({ type: 'admin' })}
+        />
+      )}
 
-      <main className="pt-20">
+      <main className={view.type === 'admin' ? '' : 'pt-20'}>
         <AnimatePresence mode="wait">
           {view.type === 'home' && (
             <motion.div
@@ -78,6 +83,18 @@ export default function App() {
                 onBack={() => setView({ type: 'home' })}
                 onGigClick={(id) => setView({ type: 'gig', id })}
               />
+            </motion.div>
+          )}
+
+          {view.type === 'admin' && (
+            <motion.div
+              key="admin"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.3 }}
+            >
+              <AdminDashboard onBack={() => setView({ type: 'home' })} />
             </motion.div>
           )}
         </AnimatePresence>

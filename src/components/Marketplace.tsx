@@ -1,21 +1,32 @@
 import React, { useState, useMemo } from 'react';
 import { motion } from 'motion/react';
-import { Search, Filter, Star, TrendingUp, Award, Instagram, Linkedin, Twitter } from 'lucide-react';
+import { Search, Filter, Star, TrendingUp, Award, Instagram, Linkedin, Twitter, ChevronDown } from 'lucide-react';
 import { CATEGORIES, GIGS } from '../data';
 
 export default function Marketplace({ onGigClick }: { onGigClick: (id: string) => void }) {
   const [activeCategory, setActiveCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
+  const [sortBy, setSortBy] = useState('relevance');
 
   const filteredGigs = useMemo(() => {
-    return GIGS.filter(gig => {
+    let result = GIGS.filter(gig => {
       const matchesCategory = activeCategory === 'All' || gig.category === activeCategory;
       const matchesSearch = gig.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
                             gig.tags.some((t: string) => t.toLowerCase().includes(searchQuery.toLowerCase())) ||
                             gig.creator.name.toLowerCase().includes(searchQuery.toLowerCase());
       return matchesCategory && matchesSearch;
     });
-  }, [activeCategory, searchQuery]);
+
+    if (sortBy === 'price-low') {
+      result.sort((a, b) => a.price - b.price);
+    } else if (sortBy === 'price-high') {
+      result.sort((a, b) => b.price - a.price);
+    } else if (sortBy === 'rating') {
+      result.sort((a, b) => b.rating - a.rating);
+    }
+
+    return result;
+  }, [activeCategory, searchQuery, sortBy]);
 
   const trendingGigs = useMemo(() => GIGS.filter(g => g.trending), []);
   
@@ -115,8 +126,25 @@ export default function Marketplace({ onGigClick }: { onGigClick: (id: string) =
       )}
 
       {/* Main Grid */}
-      <div className="flex items-center gap-2 mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <h2 className="text-2xl font-bold">{searchQuery ? 'Search Results' : 'Explore All Gigs'}</h2>
+        
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-slate-400">Sort by:</span>
+          <div className="relative">
+            <select 
+              value={sortBy} 
+              onChange={(e) => setSortBy(e.target.value)}
+              className="bg-slate-800/50 border border-slate-700 rounded-xl py-2 pl-4 pr-10 text-white focus:outline-none focus:border-pink-500 transition-colors appearance-none cursor-pointer"
+            >
+              <option value="relevance">Relevance</option>
+              <option value="price-low">Price: Low to High</option>
+              <option value="price-high">Price: High to Low</option>
+              <option value="rating">Highest Rating</option>
+            </select>
+            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+          </div>
+        </div>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {filteredGigs.map((gig, index) => (
